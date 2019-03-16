@@ -39,7 +39,7 @@ case class WhiskTriggerPut(parameters: Option[Parameters] = None,
  * @param action the fully qualified name of the action to be fired
  * @param status status of the rule
  */
-case class ReducedRule(action: FullyQualifiedEntityName, status: Status)
+case class ReducedRule(action: FullyQualifiedEntityName, status: Status, annotations: Parameters)
 
 /**
  * A WhiskTrigger provides an abstraction of the meta-data
@@ -101,7 +101,7 @@ case class WhiskTrigger(namespace: EntityPath,
 
 object ReducedRule extends DefaultJsonProtocol {
   private implicit val fqnSerdes = FullyQualifiedEntityName.serdes
-  implicit val serdes = jsonFormat2(ReducedRule.apply)
+  implicit val serdes = jsonFormat3(ReducedRule.apply)
 }
 
 object WhiskTrigger

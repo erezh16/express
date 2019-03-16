@@ -156,7 +156,7 @@ trait WhiskRulesApi extends WhiskCollectionAPI with ReferencedEntities {
               logging.debug(this, s"[POST] attempting to set rule state to: ${newStatus}")
               WhiskTrigger.get(entityStore, rule.trigger.toDocId) flatMap { trigger =>
                 val newTrigger = trigger.removeRule(ruleName)
-                val triggerLink = ReducedRule(rule.action, newStatus)
+                val triggerLink = ReducedRule(rule.action, newStatus, rule.annotations)
                 WhiskTrigger.put(entityStore, newTrigger.addRule(ruleName, triggerLink), Some(trigger))
               }
           }
@@ -291,7 +291,7 @@ trait WhiskRulesApi extends WhiskCollectionAPI with ReferencedEntities {
             content.publish getOrElse false,
             content.annotations getOrElse Parameters())
 
-          val triggerLink = ReducedRule(actionName, Status.ACTIVE)
+          val triggerLink = ReducedRule(actionName, Status.ACTIVE, rule.annotations)
           logging.debug(this, s"about to put ${trigger.addRule(ruleName, triggerLink)}")
           WhiskTrigger.put(entityStore, trigger.addRule(ruleName, triggerLink), old = None) map { _ =>
             rule
@@ -334,7 +334,7 @@ trait WhiskRulesApi extends WhiskCollectionAPI with ReferencedEntities {
             WhiskTrigger.put(entityStore, oldTrigger.removeRule(ruleName), oldTriggerOpt)
           }
 
-          val triggerLink = ReducedRule(actionName, status)
+          val triggerLink = ReducedRule(actionName, status, r.annotations)
           val update = WhiskTrigger.put(entityStore, newTrigger.addRule(ruleName, triggerLink), oldTriggerOpt)
           Future.sequence(Seq(deleteOldLink.getOrElse(Future.successful(true)), update)).map(_ => r)
       }
