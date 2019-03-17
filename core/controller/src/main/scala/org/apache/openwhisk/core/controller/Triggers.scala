@@ -47,6 +47,7 @@ import org.apache.openwhisk.core.entity.types.EntityStore
 import org.apache.openwhisk.http.ErrorResponse
 import org.apache.openwhisk.http.Messages
 import org.apache.openwhisk.core.database.UserContext
+import org.apache.openwhisk.core.SchedPolicy
 
 /** A trait implementing the triggers API. */
 trait WhiskTriggersApi extends WhiskCollectionAPI {
@@ -329,7 +330,13 @@ trait WhiskTriggersApi extends WhiskCollectionAPI {
             rule.action,
             Left(Messages.triggerWithInactiveRule(ruleName.asString, rule.action.asString)))
         }
-      case (ruleName, rule) =>
+      case (ruleName, rule) => {
+        // Check for RTP policy in the rule and update the RTP parameter if needed
+        rule.annotations.get(SchedPolicy.RTP_LABEL) match {
+          case Some(ann) => logging.info(this, s"Trigger for rule '${ruleName}' with special policy '${ann}'")
+          case None => ()
+        }
+
         // Invoke the action. Retain action results for inclusion in the trigger activation record
         postActivation(user, rule, args)
           .flatMap { response =>
@@ -345,11 +352,12 @@ trait WhiskTriggersApi extends WhiskCollectionAPI {
                 Unmarshal(response.entity).to[String].map { error =>
                   val failureType = code match {
                     case _: ServerError => ActivationResponse.WhiskError // all 500s are to be considered whisk errors
-                    case _              => ActivationResponse.ApplicationError
+                    case _ => ActivationResponse.ApplicationError
                   }
                   val errorMessage: String = Try(error.parseJson.convertTo[ErrorResponse])
                     .map { e =>
                       def logMsg = s"trigger-fired action '${rule.action}' failed to invoke with ${e.error}, ${e.code}"
+
                       if (failureType == ActivationResponse.ApplicationError) logging.debug(this, logMsg)
                       else logging.error(this, logMsg)
 
@@ -374,6 +382,7 @@ trait WhiskTriggersApi extends WhiskCollectionAPI {
                 rule.action,
                 Left(InternalServerError.defaultMessage))
           }
+      }
     }
 
     Future.sequence(ruleResults)
