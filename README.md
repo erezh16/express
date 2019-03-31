@@ -17,7 +17,10 @@
 #
 -->
 
-# OpenWhisk
+# EXPRESS
+
+EXtended PREdictability ServerlesS. A serverless distribution, based on Apache OpenWhisk, with enahcnements for predictable computation.
+The rest of this README.md is taken from oiginal OpenWhisk documentation.
 
 [![Build Status](https://travis-ci.org/apache/incubator-openwhisk.svg?branch=master)](https://travis-ci.org/apache/incubator-openwhisk)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
